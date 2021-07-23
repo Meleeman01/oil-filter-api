@@ -1,0 +1,26 @@
+{
+  "name": "oil-filter-api",
+  "version": "1.0.0",
+  "description": "because walmart got rid of my api selector",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Meleeman01/oil-filter-api.git"
+  },
+  "keywords": [
+    "nah"
+  ],
+  "author": "meleeman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Meleeman01/oil-filter-api/issues"
+  },
+  "homepage": "https://github.com/Meleeman01/oil-filter-api#readme",
+  "dependencies": {
+    "mflx": "^1.1.7",
+    "puppeteer": "^10.1.0"
+  }
+}
