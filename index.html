@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Find your Oil filter!</title>
+</head>
+<body>
+	<h1>Oil Filter Api</h1>
+	<h2>because walmart pissed me off when they removed their oil filter kiosk, and walmart.com sucks ass.</h2>
+	<script>
+		let data = {'test':'lolola test!'}
+
+		fetch('http://localhost:3333/post',{
+		method: 'POST', // or 'PUT'
+		mode: 'no-cors',
+  		headers: {
+
+    		'Content-Type': 'application/json',
+  		},
+  		body: JSON.stringify(data),
+  		});
+		
+	</script>
+</body>
+</html>

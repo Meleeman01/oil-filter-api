@@ -20,7 +20,8 @@
   },
   "homepage": "https://github.com/Meleeman01/oil-filter-api#readme",
   "dependencies": {
-    "mflx": "^1.1.7",
+    "get-body": "^1.0.3",
+    "mflx": "1.1.8",
     "puppeteer": "^10.1.0"
   }
 }
