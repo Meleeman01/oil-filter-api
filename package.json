@@ -4,7 +4,11 @@
   "description": "because walmart got rid of my api selector",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx mix",
+    "watch": "npx mix watch",
+    "hot": "npx mix watch hot",
+    "production": "npx mix --production"
   },
   "repository": {
     "type": "git",
@@ -21,7 +25,13 @@
   "homepage": "https://github.com/Meleeman01/oil-filter-api#readme",
   "dependencies": {
     "get-body": "^1.0.3",
+    "laravel-mix": "^6.0.49",
+    "laravel-mix-svelte": "^0.5.0",
     "mflx": "1.1.8",
-    "puppeteer": "^10.1.0"
+    "puppeteer": "^10.1.0",
+    "svelte": "^3.49.0"
+  },
+  "devDependencies": {
+    "svelte-loader": "^3.1.3"
   }
 }
