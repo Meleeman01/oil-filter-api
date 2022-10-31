@@ -1,0 +1,315 @@
+/*a basic flex-box library*/
+:root {
+  --primary: #6a4c94;
+  --secondary: #ef8801;
+  --success: #8bc926;
+  --warning: #ffca38;
+  --error: #ff575c;
+  --info: #1981c2;
+  --black: #1f1300;
+  --white: #fffaff;
+  --main-title:'Arial';
+  --sub-titles:'Montserrat';
+  --paragraphs:'Montserrat';
+  --title-size:5rem;
+  --subtitle-size:2.5rem;
+  --padme-setting:1.5em 1.5em 1.5em 1.5em;
+  --button-roundness:2em 2em 2em 2em;
+  --marginme-setting:1.5em 0em 1.5em 0em; }
+
+:focus {
+  outline: none; }
+
+::-moz-focus-inner {
+  border: 0; }
+
+h1 {
+  font-family: var(--main-title), "sans-serif";
+  font-size: var(--title-size); }
+
+h2 {
+  font-size: var(--subtitle-size); }
+
+h2, h3, h4, h5, h6 {
+  font-family: var(--sub-titles), "sans"; }
+
+p, button, a, textarea, li, label, span, select, input, .link {
+  font-family: var(--paragraphs), "sans";
+  text-decoration: none;
+  outline: none;
+  border: none;
+  padding: 0;
+  line-height: 1.5;
+  word-break: break-word; }
+
+input, p, .link {
+  margin: .25em 0; }
+
+img, video {
+  max-width: 100%; }
+
+input:focus, textarea:focus, select:focus {
+  border: solid 1px var(--primary);
+  border-radius: 4px; }
+
+button:focus, a:focus {
+  border: solid 1px black; }
+
+input, button, submit, .is-round:active {
+  border: none; }
+
+button[disabled], input[disabled] {
+  background-color: #ccc;
+  color: grey; }
+
+.link:link {
+  text-decoration: none;
+  color: var(--info); }
+
+.link:visited {
+  color: var(--info); }
+
+/*color lightened by 5%*/
+.link:hover, .link:focus {
+  border: 0;
+  color: #1c90d9; }
+
+ul {
+  list-style-type: none;
+  padding: 0; }
+
+.primary {
+  background-color: var(--primary); }
+
+.secondary {
+  background-color: var(--secondary); }
+
+.white {
+  background-color: var(--white); }
+
+.black {
+  background-color: var(--black); }
+
+.flx\(\), .flx {
+  display: flex; }
+
+.flx\(wrap\) {
+  display: flex;
+  flex-wrap: wrap; }
+
+.flx\(column\) {
+  display: flex;
+  flex-direction: column; }
+
+.flx\(nowrap\) {
+  display: flex;
+  flex-wrap: nowrap; }
+
+.flx\(nowrap\,column\),
+.flx\(column\,nowrap\) {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column; }
+
+.flx\(column\,wrap\),
+.flx\(wrap\,column\) {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column; }
+
+/*vertical alignment for non flex items*/
+.top, .col-left {
+  align-items: flex-start; }
+
+.bottom, .col-right {
+  align-items: flex-end; }
+
+.baseline {
+  align-items: baseline; }
+
+.middle, .col-center {
+  align-items: center; }
+
+.stretch {
+  align-items: stretch; }
+
+/*horizontal alignment*/
+.left, .col-top {
+  justify-content: flex-start; }
+
+.right, .col-bottom {
+  justify-content: flex-end; }
+
+.center, .col-middle {
+  justify-content: center; }
+
+.space-evenly, .col-space-evenly {
+  justify-content: space-evenly; }
+
+.space-around, .col-space-around {
+  justify-content: space-around; }
+
+.space-between, .col-space-between {
+  justify-content: space-between; }
+
+.padme {
+  padding: var(--padme-setting); }
+
+.marginme {
+  margin: var(--marginme-setting); }
+
+.is-1 {
+  min-width: 8.333333333%; }
+
+.is-2 {
+  min-width: 16.666666666%; }
+
+.is-3, .is-quarter {
+  min-width: 24.999999999%; }
+
+.is-4, .is-one-third {
+  min-width: 33.333333333%; }
+
+.is-5 {
+  min-width: 41.666666666%; }
+
+.is-6, .is-half {
+  min-width: 49.999999999%; }
+
+.is-7 {
+  min-width: 58.333333333%; }
+
+.is-8, .is-two-thirds {
+  min-width: 66.666666666%; }
+
+.is-9, .is-three-quarters {
+  min-width: 74.999999999%; }
+
+.is-10 {
+  min-width: 83.333333333%; }
+
+.is-11 {
+  min-width: 91.666666666%; }
+
+.is-12, .is-full {
+  min-width: 100%; }
+
+.is-fluid {
+  min-width: 0; }
+
+.btn\(\), .btn, .btn\(normal\) {
+  background-color: var(--white);
+  border-width: 1px;
+  color: var(--black);
+  cursor: pointer;
+  font-size: 1em;
+  justify-content: center;
+  padding: calc(0.5em - 1px) 1em;
+  line-height: 1.5em;
+  text-align: center;
+  white-space: nowrap;
+  outline: none; }
+
+.btn\(small\) {
+  background-color: var(--white);
+  color: var(--black);
+  cursor: pointer;
+  padding: calc(0.25em - 1px) 0.5em;
+  line-height: 1.5em;
+  text-align: center;
+  white-space: nowrap;
+  font-size: .75em;
+  outline: none; }
+
+.btn\(large\) {
+  background-color: var(--white);
+  color: var(--black);
+  cursor: pointer;
+  padding: calc(.75em - 1px) 1.25em;
+  line-height: 1.5em;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 1em;
+  outline: none; }
+
+.btn\(xlarge\) {
+  background-color: var(--white);
+  color: var(--black);
+  cursor: pointer;
+  padding: calc(0.25em - 1px) 0.5em;
+  line-height: 1.5em;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 2em;
+  outline: none; }
+
+/*
+    each  color has a 2% darken for hover
+    and a 5% darken for active except is-black
+*/
+.is-primary {
+  background-color: var(--primary);
+  color: var(--white); }
+  .is-primary:hover {
+    background-color: #65498d; }
+  .is-primary:active {
+    background-color: #5e4483; }
+
+.is-secondary {
+  background-color: var(--secondary);
+  color: var(--white); }
+  .is-secondary::hover {
+    background-color: #e48201; }
+  .is-secondary:active {
+    background-color: #d57901; }
+
+.is-success {
+  background-color: var(--success);
+  color: var(--black); }
+  .is-success:hover {
+    background-color: #85c125; }
+  .is-success:active {
+    background-color: #7cb422; }
+
+.is-warning {
+  background-color: var(--warning);
+  color: var(--black); }
+  .is-warning:hover {
+    background-color: #ffc72e; }
+  .is-warning:active {
+    background-color: #ffc31f; }
+
+.is-info {
+  background-color: var(--info);
+  color: var(--white); }
+  .is-info a:hover {
+    background-color: #187bb9; }
+  .is-info a:active {
+    background-color: #1672ac; }
+
+.is-error {
+  background-color: var(--error);
+  color: var(--white); }
+  .is-error:hover {
+    background-color: #ff4d52; }
+  .is-error:active {
+    background-color: #ff3d44; }
+
+.is-black {
+  background-color: var(--black);
+  color: var(--white); }
+  .is-black:hover {
+    background-color: #140d00; }
+  .is-black:active {
+    background-color: var(--black); }
+
+.is-white {
+  background-color: var(--white);
+  color: var(--black); }
+  .is-white:hover {
+    background-color: #fff0ff; }
+  .is-white:active {
+    background-color: #ffe0ff; }
+
+.is-round {
+  border-radius: var(--button-roundness); }
