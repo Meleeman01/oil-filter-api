@@ -7,12 +7,25 @@ const {parse,json,text,from} = require('get-body');
 const puppeteer = require('puppeteer');
 
 
-const { Curl } = require('node-libcurl');
-const curl = new Curl();
-// curl.setOpt(Curl.option.HTTPHEADER,
-//   ['Content-Type: application/x-amz-json-1.1',
-//     'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36 OPR/86.0.4363.59',
-//   ]);
+const fs = require('fs');
+
+function log(message) {
+  // console.log(message);
+   message = message+'\n';
+   // Append to a file if it exists, otherwise create a new file
+  fs.writeFile('./logs/log.txt', message, { flag: 'a' }, (err) => {
+    if (err) {
+      console.log('error writing to logfile...');
+      console.error(err);
+      return;
+    }
+  });
+}
+
+
+const uaData = require('./ua.js');
+
+
 
 let browser;
 let page;
@@ -23,10 +36,10 @@ async function start(){
     headless : true,
     args:[
     '--window-size=1920,1080',
-    '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36 OPR/86.0.4363.59'
+    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36'
     ]
   });
-  // page.setUserAgent('');
+  
   page = await browser.newPage();
   
 }
@@ -34,7 +47,6 @@ start();
 //serve our file to avoid cors errors
 var serve = serveStatic('build');
 const requestListener = async function (req, res) {
-  
 
   if (req.method == 'GET') {
     console.log('it is a get request');
@@ -43,16 +55,44 @@ const requestListener = async function (req, res) {
     let parameters = url.parse(req.url,true).query;
    if (req.url.startsWith('/makes')) {
       //looking for query parameters
-    
-    await page.goto(`https://www.autozone.com/ecomm/b2c/v1/ymme/makes/${parameters.year}`,{waitUntil : 'domcontentloaded',});
-    let result = await page.$eval('pre', el => el.textContent);
-    console.log(res);
+    let result;
+    let uaList;
+
+    try{ 
+      await page.goto(`https://www.autozone.com/ecomm/b2c/v1/ymme/makes/${parameters.year}`,{waitUntil : 'networkidle2',});
+      result = await page.$eval('pre', el => el.textContent);
+    }
+    catch(err) {
+      //res.setHeader('Content-Type','application/json');
+      console.log(err);
+      if (err) {
+        for (let userAgent in uaData) {
+          console.log(userAgent);
+          log(uaData[userAgent]);
+          try {
+
+              await page.setUserAgent(uaData[userAgent]);
+              await page.goto(`https://www.autozone.com/ecomm/b2c/v1/ymme/makes/${parameters.year}`,{waitUntil : 'networkidle2',});
+
+              result = await page.$eval('pre', el => el.textContent);
+              break;
+          }
+          catch(err) {
+            continue;
+          }
+
+        }
+       // res.end(`ERROR:  Try refreshing the page and try again`);
+      }
+    }
+
+    console.log(result);
     res.setHeader('Content-Type', 'application/json');
     res.end(result);
    }
 
    else if(req.url.startsWith('/models')) {
-    console.log('lol');
+
     //process the input
     parameters.make = parameters.make.toLowerCase();
     try {
