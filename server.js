@@ -5,7 +5,7 @@ const serveStatic = require('serve-static');
 const finalhandler = require('finalhandler');
 const {parse,json,text,from} = require('get-body');
 const puppeteer = require('puppeteer');
-
+const proxyChain = require('proxy-chain');
 
 const fs = require('fs');
 
@@ -59,36 +59,20 @@ const requestListener = async function (req, res) {
     let uaList;
 
     try{ 
-      await page.goto(`https://www.autozone.com/ecomm/b2c/v1/ymme/makes/${parameters.year}`,{waitUntil : 'networkidle2',});
-      result = await page.$eval('pre', el => el.textContent);
+      await page.goto(`https://www.rockauto.com/en/catalog/`,{waitUntil : 'networkidle2',});
+      await page.waitForSelector(`a[href='/en/catalog/zundapp'].navlabellink`);
+      result = await page.$$eval('.ranavnode .ranavouter .inner .tbl', elements => {
+        return elements.map((el) => {
+          return { text:el.textContent};
+        });
+      });
     }
     catch(err) {
-      //res.setHeader('Content-Type','application/json');
-      console.log(err);
-      if (err) {
-        for (let userAgent in uaData) {
-          console.log(userAgent);
-          log(uaData[userAgent]);
-          try {
-
-              await page.setUserAgent(uaData[userAgent]);
-              await page.goto(`https://www.autozone.com/ecomm/b2c/v1/ymme/makes/${parameters.year}`,{waitUntil : 'networkidle2',});
-
-              result = await page.$eval('pre', el => el.textContent);
-              break;
-          }
-          catch(err) {
-            continue;
-          }
-
-        }
-       // res.end(`ERROR:  Try refreshing the page and try again`);
-      }
+        console.log(err);
     }
-
     console.log(result);
     res.setHeader('Content-Type', 'application/json');
-    res.end(result);
+    res.end(JSON.stringify(result));
    }
 
    else if(req.url.startsWith('/models')) {

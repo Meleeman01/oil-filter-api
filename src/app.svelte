@@ -169,7 +169,7 @@
                 {#if makes.length}
                     <option>--choose make--</option>
                     {#each makes as make}
-                    <option value="{make.make}">{make.make}</option>
+                    <option value="{make.text}">{make.text}</option>
                     {/each}
                 {/if}
             </select> 

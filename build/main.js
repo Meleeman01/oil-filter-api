@@ -675,14 +675,14 @@ function create_if_block_4(ctx) {
 // (171:20) {#each makes as make}
 function create_each_block_2(ctx) {
   var option;
-  var t_value = /*make*/ctx[32].make + "";
+  var t_value = /*make*/ctx[32].text + "";
   var t;
   var option_value_value;
   return {
     c: function c() {
       option = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.element)("option");
       t = (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.text)(t_value);
-      option.__value = option_value_value = /*make*/ctx[32].make;
+      option.__value = option_value_value = /*make*/ctx[32].text;
       option.value = option.__value;
     },
     m: function m(target, anchor) {
@@ -690,8 +690,8 @@ function create_each_block_2(ctx) {
       (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.append)(option, t);
     },
     p: function p(ctx, dirty) {
-      if (dirty[0] & /*makes*/64 && t_value !== (t_value = /*make*/ctx[32].make + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data)(t, t_value);
-      if (dirty[0] & /*makes*/64 && option_value_value !== (option_value_value = /*make*/ctx[32].make)) {
+      if (dirty[0] & /*makes*/64 && t_value !== (t_value = /*make*/ctx[32].text + "")) (0,svelte_internal__WEBPACK_IMPORTED_MODULE_0__.set_data)(t, t_value);
+      if (dirty[0] & /*makes*/64 && option_value_value !== (option_value_value = /*make*/ctx[32].text)) {
         option.__value = option_value_value;
         option.value = option.__value;
       }
