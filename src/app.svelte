@@ -18,9 +18,9 @@
 
     let query;
 
-    for (let i = 1990; i <= parseInt(currentYear); i++) {
-        years.push(i);
-    }
+    // for (let i = 1990; i <= parseInt(currentYear); i++) {
+    //     years.push(i);
+    // }
     console.log(years);
     function processFuelFilters(fuelFilters) {
         return fuelFilters.filter((filter)=>{
@@ -46,6 +46,11 @@
         }});
         makes = await result.json();
     }
+    async function getYear() {
+        const result = await fetch(`http://localhost:3333/years?make=${encodeURIComponent(selectedMake)}`) 
+        years = await result.json();
+        console.log(years);
+    }
 
     async function getModel() {
         console.log(selectedMake);
@@ -54,7 +59,7 @@
         }
         isLoading = true;
         await scrollToBottom();
-        let result = await fetch(`http://localhost:3333/models?year=${selectedYear}&make=${encodeURIComponent(selectedMake)}`);
+        let result = await fetch(`http://localhost:3333/models?year=${encodeURIComponent(selectedYear)}&make=${encodeURIComponent(selectedMake)}`);
         models = await result.json();
         if (await result) {
             isLoading = false;
@@ -104,6 +109,15 @@
         if (await result) {
             
             isLoading = false;
+            console.log(fuelFilters);
+            if (fuelFilters.length < 1) {
+                error = 'No Filters Found.';
+                return;
+            }
+            else if (fuelFilters.err) {
+                error = fuelFilters.err;
+                return;
+            }
 
             fuelFilters = processFuelFilters(fuelFilters);
             console.log(fuelFilters);
@@ -131,47 +145,59 @@
         query = selectedQuery[0].text.substring(selectedQuery[0].text.indexOf("Parts"),selectedQuery[0].text.lastIndexOf('Price'));
         fuelFilters = selectedQuery;
     }
-    
+    async function init() {
+        //fetch the makes at the beginning 
+        let result = await fetch(`http://localhost:3333/makes`,{mode:'cors',headers:{
+            'Content-Type': 'application/json',
+        }});
+
+
+        makes = await result.json();
+        console.log(makes);
+        if (makes.err) {
+           error = makes.err;
+        }
+    }
+    init();
 </script>
 
-<div class="flx(wrap) middle left">
+<div class="flx(wrap) middle center">
     <h1>Oil Filter Api</h1>
     <h2>because walmart pissed me off when they removed their oil filter kiosk, and walmart.com sucks ass.</h2>
 </div>
     
 <div class="wrapper is-12 flx(wrap,column) center middle">
-    {#if !isLoading && fuelFilters.length == 0}
+    {#if !isLoading && fuelFilters.length == 0 || error}
 
     {#if savedQueries.length}
     <select class="is-3 saved" bind:value={selectedQuery} on:change={displaySavedData}>
         <option class="flx center middle">--Select Previous Vehicle--</option>
         {#each savedQueries as query, q}
-
             <option on:click={displaySavedData} value="{query}">{query[0].text}</option>
-        
         {/each}
     </select>
     {/if}
     <form class="flx(column) col-center is-3">
         <h3>enter your year, make, model, and engine, and get your oil filter size!</h3>
-        <div class="is-full flx space-between marginme">
-            <label><b>Year:</b></label>
-            <select bind:value={selectedYear} on:change={getMakes}>
-                <option>--choose year--</option>
-                {#each years as year}
-                <option on:click={getMakes} value="{year}">{year}</option>
-                {/each}
-            </select> 
-        </div>
+        
         <div class="is-full flx space-between marginme">
             <label><b>Make:</b></label>
-            <select bind:value={selectedMake} on:change={getModel}>
+            <select bind:value={selectedMake} on:change={getYear}>
                 {#if makes.length}
                     <option>--choose make--</option>
                     {#each makes as make}
                     <option value="{make.text}">{make.text}</option>
                     {/each}
                 {/if}
+            </select> 
+        </div>
+        <div class="is-full flx space-between marginme">
+            <label><b>Year:</b></label>
+            <select bind:value={selectedYear} on:change={getModel}>
+                <option>--choose year--</option>
+                {#each years as year}
+                <option on:click={getMakes} value="{year}">{year}</option>
+                {/each}
             </select> 
         </div>
         <div class="is-full flx space-between marginme">
@@ -199,7 +225,7 @@
         </div>
         {/if}
         {#if error}
-        <span style="color:red;">{error}</span>
+        <span class="is-half" style="color:red; width: 50%; text-align: center;">{error}</span>
         {/if}
     </form>
     {:else if fuelFilters.length}

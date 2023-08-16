@@ -1,3 +1,4 @@
+require('dotenv').config()
 const http = require('http');
 const url = require('url');
 const fetch = require('cross-fetch');
@@ -6,8 +7,9 @@ const finalhandler = require('finalhandler');
 const {parse,json,text,from} = require('get-body');
 const puppeteer = require('puppeteer');
 const proxyChain = require('proxy-chain');
-
+const flag = require('./database')(process.env.MONGO_URL);
 const fs = require('fs');
+
 
 function log(message) {
   // console.log(message);
@@ -22,6 +24,32 @@ function log(message) {
   });
 }
 
+function escapeSpaces(str) {
+  if (str.includes(" ")) {
+    console.log("Space found in the string");
+    return str.split('').map(char => (char === ' ' ? '\\\\' + char : char)).join('');
+  } else {
+    console.log("No space in the string");
+    return str;
+  }
+}
+
+function replaceSpacesWithPlus(str){
+  if (str.includes(" ")) {
+    console.log("Space found in the string");
+    return str.split(' ').join('+');
+  } else {
+    console.log("No space in the string");
+    return str;
+  }
+}
+
+function isErrorObject(obj) {
+  if (!(obj instanceof Error)) {
+    obj = new Error(obj);
+  }
+  return obj;
+}
 
 const uaData = require('./ua.js');
 
@@ -51,7 +79,7 @@ const requestListener = async function (req, res) {
   if (req.method == 'GET') {
     console.log('it is a get request');
     //console.log(req);
-   
+   console.log(flag);
     let parameters = url.parse(req.url,true).query;
    if (req.url.startsWith('/makes')) {
       //looking for query parameters
@@ -59,6 +87,7 @@ const requestListener = async function (req, res) {
     let uaList;
 
     try{ 
+
       await page.goto(`https://www.rockauto.com/en/catalog/`,{waitUntil : 'networkidle2',});
       await page.waitForSelector(`a[href='/en/catalog/zundapp'].navlabellink`);
       result = await page.$$eval('.ranavnode .ranavouter .inner .tbl', elements => {
@@ -68,24 +97,58 @@ const requestListener = async function (req, res) {
       });
     }
     catch(err) {
-        console.log(err);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({err:`ERROR: ${err} Refresh and Try Again, Or click kofi link to report bug.`}));
+        return;
     }
     console.log(result);
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(result));
    }
+   //clean this elseif statement up
+   else if(req.url.startsWith('/years')) {
+      console.log(parameters);
+      
+      const evalMake = escapeSpaces(parameters.make.toLowerCase());
+      const likeMake = replaceSpacesWithPlus(parameters.make.toLowerCase());
+
+      console.log(likeMake,evalMake)
+      let result;
+      try {
+
+        await page.goto(`https://www.rockauto.com/en/catalog/${likeMake}`,{waitUntil : 'networkidle2',});
+        await page.waitForSelector(`a[href='/en/catalog/zundapp'].navlabellink`);
+        
+        result = await page.$$eval(`[id*="catalog-${parameters.make.toLowerCase()}"] + div + .nchildren > .ranavnode:not(.ra-hide)`, nodes => nodes.map(n => n.textContent));
+        console.log(result);
+      }
+      catch(err) {
+        console.log(err);
+        const e = isErrorObject(err);
+        console.log(e.message);
+        res.setHeader('Content-Type','application/json');
+        res.end(JSON.stringify({err:`ERROR: ${err} Try refreshing the page and try again`}));
+        return;
+      }
+
+      console.log("result:",result);
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(result));
+   }
 
    else if(req.url.startsWith('/models')) {
 
     //process the input
-    parameters.make = parameters.make.toLowerCase();
+    parameters.make = replaceSpacesWithPlus(parameters.make.toLowerCase());
     try {
       await page.goto(`https://www.rockauto.com/en/catalog/${parameters.make},${parameters.year}`,{waitUntil : 'networkidle2',});
       await page.waitForSelector(`a[href='/en/catalog/${parameters.make},${parameters.year}'].navlabellink`);
     }
     catch(err) {
+      console.log(err);
       res.setHeader('Content-Type','application/json');
-      res.end({err:`ERROR: ${err} Try refreshing the page and try again`});
+      res.end(JSON.stringify({err:`ERROR: ${err} Try refreshing the page and try again`}));
+      return;
     }
     
     let result = await page.$eval(`a[href='/en/catalog/${parameters.make},${parameters.year}'].navlabellink`, el => el.id);
@@ -106,24 +169,21 @@ const requestListener = async function (req, res) {
    else if (req.url.startsWith('/engines')) {
       console.log(parameters);
       //process the input
-      parameters.make = parameters.make.toLowerCase();
-      parameters.model = parameters.model.toLowerCase();
-      if(parameters.model.split(' ').length > 1) {
-        console.log('model has more than one word, needs to be processed.');
-        console.log(parameters.model);
-        parameters.model = parameters.model.split(' ').join('+');
-      }
+      parameters.make =  replaceSpacesWithPlus(parameters.make.toLowerCase());
+      parameters.model = replaceSpacesWithPlus(parameters.model.toLowerCase());
+
       let result;
       try{
         await page.goto(`https://www.rockauto.com/en/catalog/${parameters.make},${parameters.year},${parameters.model}`,{waitUntil : 'networkidle2',});
-        result = await page.$eval(`a[href='/en/catalog/${parameters.make},${parameters.year},${parameters.model.split(' ')[0]}'].navlabellink`, el => el.id);
+        result = await page.$eval(`a[href='/en/catalog/${parameters.make},${parameters.year},${parameters.model}'].navlabellink`, el => el.id);
       }
       catch(err) {
         console.log(err,'try again...');
         
         console.log(parameters);
           res.setHeader('Content-Type','application/json');
-          res.end({err:`ERROR: ${err} Try refreshing the page and try again`});
+          res.end(JSON.stringify({err:`ERROR: ${err} Try refreshing the page and try again`}));
+          return;
       }
       console.log(result);
       let id = result.substring(result.indexOf('[')+1,result.indexOf(']'));
@@ -142,14 +202,11 @@ const requestListener = async function (req, res) {
    }
    else if (req.url.startsWith('/oilfilters')) {
       console.log(parameters);
-      parameters.make = parameters.make.toLowerCase();
-      parameters.model = parameters.model.toLowerCase();
+      parameters.make = replaceSpacesWithPlus(parameters.make.toLowerCase());
+      parameters.model = replaceSpacesWithPlus(parameters.model.toLowerCase());
       let engineData = JSON.parse(parameters.engine);
-      engineData.engine = engineData.engine.toLowerCase().split(' ').join('+');
-      if(parameters.model.split(' ').length > 1) {
-        console.log('model has more than one word, needs to be processed.');
-        parameters.model = parameters.model.split(' ').join('+');
-      }
+      engineData.engine = replaceSpacesWithPlus(engineData.engine.toLowerCase());
+      
       //,2.0l+l4+sohc,1354092,engine,oil+filter,5340 we need this in order to go to the oil filter section in rock auto
       await page.goto(`https://www.rockauto.com/en/catalog/${parameters.make},${parameters.year},${parameters.model},${engineData.engine},${engineData.carcode},engine,oil+filter,5340`,{waitUntil : 'networkidle2',});
       try{
@@ -157,7 +214,8 @@ const requestListener = async function (req, res) {
       }
       catch(err) {
         res.setHeader('Content-Type','application/json');
-        res.end({err:`ERROR: ${err}`});
+        res.end(JSON.stringify({err:`ERROR: ${err}`}));
+        return;
       }
       
       console.log(engineData,parameters);
