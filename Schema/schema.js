@@ -2,9 +2,7 @@ const mongoose = require('mongoose');
 
 // Define your schema
 
-
 const makesSchema = new mongoose.Schema({
-
   make:{
     name:String,
     years: Array
@@ -29,12 +27,24 @@ const enginesSchema = new mongoose.Schema({
 });
 
 const oilFilters = new mongoose.Schema({
-  
+  oilFilters:{
+    make: String,
+    year: String,
+    model: String,
+    engine: String,
+    oilFilters: Array
+  }
 });
 
+//models
+const makes = mongoose.model('makes', makesSchema);
+const years = mongoose.model('years', yearsSchema);
+const engines = mongoose.model('engines', enginesSchema);
+const oilfilters = mongoose.model('oilfilters', oilFilters);
 
-
-
-//scraping plan, get makes, save all makes into mongoose schema.
-//when make is selected find make in recent schema and add year to it. 
-// when year is
+module.exports = {
+  makes:makes,
+  years:years,
+  engines:engines,
+  oilfilters:oilfilters
+}

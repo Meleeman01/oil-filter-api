@@ -7,7 +7,7 @@ const finalhandler = require('finalhandler');
 const {parse,json,text,from} = require('get-body');
 const puppeteer = require('puppeteer');
 const proxyChain = require('proxy-chain');
-const flag = require('./database')(process.env.MONGO_URL);
+const db = require('./database');
 const fs = require('fs');
 
 
@@ -42,6 +42,19 @@ function replaceSpacesWithPlus(str){
     console.log("No space in the string");
     return str;
   }
+}
+
+async function checkIfCached(arg) {
+  console.log(arg);
+  console.log('lol', await db(arg,'fetch'));
+  const result = await db(arg,'fetch');
+
+  return result;
+}
+
+async function updateData(arg) {
+  console.log(arg);
+  console.log(await db(arg,'update'));
 }
 
 function isErrorObject(obj) {
@@ -79,9 +92,20 @@ const requestListener = async function (req, res) {
   if (req.method == 'GET') {
     console.log('it is a get request');
     //console.log(req);
-   console.log(flag);
-    let parameters = url.parse(req.url,true).query;
+   let parameters = url.parse(req.url,true).query;
+
+
    if (req.url.startsWith('/makes')) {
+    const cachedData = await checkIfCached('makes');
+    console.log('cache:',cachedData.length);
+    if (cachedData.length > 0){
+      console.log('pulling from makes cache...');
+      const makes = cachedData.map((i) => {return {text:i.make.name}});
+
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(makes));
+      return;
+    }
       //looking for query parameters
     let result;
     let uaList;
@@ -102,11 +126,34 @@ const requestListener = async function (req, res) {
         return;
     }
     console.log(result);
+    //process results into the schema for the db.
+    let dataToStore = result.map((i) => {
+        return {
+          make:{
+            name:i.text,
+            years:[]
+          }
+        }
+                  
+    });
+    let makesDataBag = {makes:true, dataToStore}
+
+    await updateData(makesDataBag);
+
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(result));
    }
    //clean this elseif statement up
    else if(req.url.startsWith('/years')) {
+      const cachedData = await checkIfCached({years:true, data:parameters.make});
+      console.log(cachedData.make.years);
+      if (cachedData.make.years.length > 0) {
+        console.log('pulling from makes cache...');
+        console.log(cachedData);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(cachedData.make.years[0].split(',')));
+        return;
+      }
       console.log(parameters);
       
       const evalMake = escapeSpaces(parameters.make.toLowerCase());
@@ -132,6 +179,7 @@ const requestListener = async function (req, res) {
       }
 
       console.log("result:",result);
+      await updateData({years:true, data:{ make:parameters.make.toUpperCase(), years:result}});
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify(result));
    }
@@ -201,6 +249,7 @@ const requestListener = async function (req, res) {
       res.end(JSON.stringify(engines));
    }
    else if (req.url.startsWith('/oilfilters')) {
+
       console.log(parameters);
       parameters.make = replaceSpacesWithPlus(parameters.make.toLowerCase());
       parameters.model = replaceSpacesWithPlus(parameters.model.toLowerCase());
