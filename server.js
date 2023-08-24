@@ -186,11 +186,23 @@ const requestListener = async function (req, res) {
 
    else if(req.url.startsWith('/models')) {
 
+    const cachedData = await checkIfCached({models:true, data:{make:parameters.make,year:parameters.year}});
+    console.log(cachedData);
+
+    if(cachedData && cachedData.MakeYear.models.length > 0) {
+        console.log('pulling from makes cache...');
+        console.log(cachedData);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(cachedData.MakeYear.models.map((i)=> {return {model:i}})));
+        return;
+    }
+
     //process the input
-    parameters.make = replaceSpacesWithPlus(parameters.make.toLowerCase());
+    let make = parameters.make;
+    make = replaceSpacesWithPlus(parameters.make.toLowerCase());
     try {
-      await page.goto(`https://www.rockauto.com/en/catalog/${parameters.make},${parameters.year}`,{waitUntil : 'networkidle2',});
-      await page.waitForSelector(`a[href='/en/catalog/${parameters.make},${parameters.year}'].navlabellink`);
+      await page.goto(`https://www.rockauto.com/en/catalog/${make},${parameters.year}`,{waitUntil : 'networkidle2',});
+      await page.waitForSelector(`a[href='/en/catalog/${make},${parameters.year}'].navlabellink`);
     }
     catch(err) {
       console.log(err);
@@ -199,7 +211,7 @@ const requestListener = async function (req, res) {
       return;
     }
     
-    let result = await page.$eval(`a[href='/en/catalog/${parameters.make},${parameters.year}'].navlabellink`, el => el.id);
+    let result = await page.$eval(`a[href='/en/catalog/${make},${parameters.year}'].navlabellink`, el => el.id);
     console.log(result);
     let id = result.substring(result.indexOf('[')+1,result.indexOf(']'));
     console.log(id);
@@ -208,22 +220,51 @@ const requestListener = async function (req, res) {
         return models.map(model => JSON.parse(model.value));
       })
 
+      //save to db
+      await updateData({
+
+        models:true, 
+        data:{ 
+          make:parameters.make.toUpperCase(), 
+          year:parameters.year, 
+          models:models.map((i)=> i.model)
+        }
+      });
+
       models = models.map((model) => {return {model:model.model}});
       console.log(models);
 
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify(models));
    }
+   //====================engines==========================================================//
    else if (req.url.startsWith('/engines')) {
       console.log(parameters);
       //process the input
-      parameters.make =  replaceSpacesWithPlus(parameters.make.toLowerCase());
-      parameters.model = replaceSpacesWithPlus(parameters.model.toLowerCase());
+      let make =  replaceSpacesWithPlus(parameters.make.toLowerCase());
+      let model = replaceSpacesWithPlus(parameters.model.toLowerCase());
+
+      //check cached result here
+      const cachedData = await checkIfCached({engines:true, data:{
+          make:parameters.make,
+          year:parameters.year,
+          model:parameters.model
+        }
+      });
+      console.log(cachedData);
+
+      if(cachedData && cachedData.MakeYearModel.engines.length > 0) {
+          console.log('pulling from engines cache...');
+          console.log(cachedData);
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(cachedData.MakeYearModel.engines));
+          return;
+      }
 
       let result;
       try{
-        await page.goto(`https://www.rockauto.com/en/catalog/${parameters.make},${parameters.year},${parameters.model}`,{waitUntil : 'networkidle2',});
-        result = await page.$eval(`a[href='/en/catalog/${parameters.make},${parameters.year},${parameters.model}'].navlabellink`, el => el.id);
+        await page.goto(`https://www.rockauto.com/en/catalog/${make},${parameters.year},${model}`,{waitUntil : 'networkidle2',});
+        result = await page.$eval(`a[href='/en/catalog/${make},${parameters.year},${model}'].navlabellink`, el => el.id);
       }
       catch(err) {
         console.log(err,'try again...');
@@ -245,21 +286,54 @@ const requestListener = async function (req, res) {
        return  {carcode:engine.carcode, engine:engine.engine}
       });
       console.log(engines);
+
+      await updateData({
+        engines:true, 
+        data:{ 
+          make:parameters.make.toUpperCase(), 
+          year:parameters.year, 
+          model:parameters.model,
+          engines:engines
+        }
+      });
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify(engines));
    }
    else if (req.url.startsWith('/oilfilters')) {
 
       console.log(parameters);
-      parameters.make = replaceSpacesWithPlus(parameters.make.toLowerCase());
-      parameters.model = replaceSpacesWithPlus(parameters.model.toLowerCase());
-      let engineData = JSON.parse(parameters.engine);
-      engineData.engine = replaceSpacesWithPlus(engineData.engine.toLowerCase());
+
+
       
+
+      
+
+      let make = replaceSpacesWithPlus(parameters.make.toLowerCase());
+      let model = replaceSpacesWithPlus(parameters.model.toLowerCase());
+      let engineData = JSON.parse(parameters.engine);
+      let engine = replaceSpacesWithPlus(engineData.engine.toLowerCase());
+
+      //check cached result here
+      const cachedData = await checkIfCached({oilFilters:true, data:{
+          make:parameters.make,
+          year:parameters.year,
+          model:parameters.model,
+          engine:engineData.engine
+        }
+      });
+
+      if(cachedData && cachedData.oilFilters.oilFilters.length > 0) {
+          console.log('pulling from oilFilters cache...');
+          console.log(cachedData);
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify(cachedData.oilFilters.oilFilters));
+          return;
+      }
+
       //,2.0l+l4+sohc,1354092,engine,oil+filter,5340 we need this in order to go to the oil filter section in rock auto
-      await page.goto(`https://www.rockauto.com/en/catalog/${parameters.make},${parameters.year},${parameters.model},${engineData.engine},${engineData.carcode},engine,oil+filter,5340`,{waitUntil : 'networkidle2',});
+      await page.goto(`https://www.rockauto.com/en/catalog/${make},${parameters.year},${model},${engine},${engineData.carcode},engine,oil+filter,5340`,{waitUntil : 'networkidle2',});
       try{
-        await page.waitForSelector(`form[action='/en/catalog/${parameters.make},${parameters.year},${parameters.model},${engineData.engine},${engineData.carcode},engine,oil+filter,5340'] > .listing-container-border > div > table.nobmp > tbody.listing-inner > tr > td > span`);
+        await page.waitForSelector(`form[action='/en/catalog/${make},${parameters.year},${model},${engine},${engineData.carcode},engine,oil+filter,5340'] > .listing-container-border > div > table.nobmp > tbody.listing-inner > tr > td > span`);
       }
       catch(err) {
         res.setHeader('Content-Type','application/json');
@@ -268,12 +342,22 @@ const requestListener = async function (req, res) {
       }
       
       console.log(engineData,parameters);
-      let oilfilterResults = await page.$$eval(`form[action='/en/catalog/${parameters.make},${parameters.year},${parameters.model},${engineData.engine},${engineData.carcode},engine,oil+filter,5340'] > .listing-container-border > div > table.nobmp > tbody`, elements => {
+      let oilfilterResults = await page.$$eval(`form[action='/en/catalog/${make},${parameters.year},${model},${engine},${engineData.carcode},engine,oil+filter,5340'] > .listing-container-border > div > table.nobmp > tbody`, elements => {
         return elements.map((el) => {
           return { text:el.innerText};
         });
       });
       console.log(oilfilterResults);
+      await updateData({
+        oilFilters:true, 
+        data:{ 
+          make:parameters.make.toUpperCase(), 
+          year:parameters.year, 
+          model:parameters.model,
+          engine:engineData.engine,
+          oilFilters:oilfilterResults
+        }
+      });
       res.setHeader('Content-Type','application/json');
       res.end(JSON.stringify(oilfilterResults));
    }
